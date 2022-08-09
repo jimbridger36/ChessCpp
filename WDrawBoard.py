@@ -142,8 +142,12 @@ def b(num):
 	if remainder == 0:
 		return initial
 	else:
-		return ('0' * (4 - remainder)) + initial
+		initial = ('0' * (4 - remainder)) + initial
+		return initial, len(initial), 'bits'
 
+def h(num):
+	whole = hex(num)
+	return whole[2:], len(whole[2:]) * 4, 'bits'
 
 
 
@@ -162,6 +166,10 @@ class PieceEnum:
 
 pe = PieceEnum
 
+
+
+
+
 directionsVec = {PieceEnum.rook  : np.array([[1, 0], [-1, 0], [0, 1], [0, -1]]),
                  PieceEnum.bishop: np.array([[1, 1], [1, -1], [-1, 1], [-1, -1]]),
                  PieceEnum.queen : np.concatenate(
@@ -169,18 +177,31 @@ directionsVec = {PieceEnum.rook  : np.array([[1, 0], [-1, 0], [0, 1], [0, -1]]),
                  PieceEnum.knight: np.array([[2, 1], [2, -1], [-2, 1], [-2, -1], [1, 2], [1, -2], [-1, 2], [-1, -2]])
                  }
 
-board = chess.Board()
-#print("done initialising")
+z = [None] * 5
+
+
+board = chess.Board(fenString="8/8/8/8/8/8/8/4K2R w KQkq - 0 1")
 bg = board
 main()
-#print('done maining')
-draw()
-#print('done drawing')
-print(bg.getPieceIndex(0 + 6*8))
-
-bg.pyRemovePiece(0 + 1*8)
 draw()
 
-bg.doNormalMove(0,0 + 6*8)
+
+z[0] = h(bg.getZ()), 'inital Z'
+bg.pyDoCastle(False, True)
+z[1] = h(bg.getZ()), 'after castling'
 draw()
+bg.pyUndoMove()
+z[2] = h(bg.getZ()), 'after undoing'
+bg.setPiece(pe.pawn, 6, 4)
+z[3] = h(bg.getZ()), 'before promotion'
+draw()
+
+
+
+
+
+
+
+
+
 

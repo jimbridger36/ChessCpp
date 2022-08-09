@@ -6,7 +6,7 @@
 #include "Python.h"
 struct PiecePos;
 
-/* "Wchess.pyx":1148
+/* "Wchess.pyx":1407
  * # ported
  * IF True:
  * 	ctypedef public enum PieceEnum:             # <<<<<<<<<<<<<<
@@ -15,7 +15,7 @@ struct PiecePos;
  */
 enum PieceEnum {
 
-  /* "Wchess.pyx":1159
+  /* "Wchess.pyx":1418
  * 		white = 0
  * 		black = 8
  * 		wpawn = pawn | white             # <<<<<<<<<<<<<<
@@ -35,7 +35,7 @@ enum PieceEnum {
 };
 typedef enum PieceEnum PieceEnum;
 
-/* "Wchess.pyx":435
+/* "Wchess.pyx":473
  * # declaring PiecePos and makePiecePos
  * IF True:
  * 	cdef public struct PiecePos:             # <<<<<<<<<<<<<<

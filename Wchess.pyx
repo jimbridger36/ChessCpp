@@ -26,6 +26,10 @@ ctypedef int stackType
 DEF DefaultFenString = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1'
 DEF doingEnPassant = True
 DEF checkMateVal = 256 # 8 bits long
+DEF castleZValsOffset = 1
+DEF enPassantZValsOffset = 5
+
+
 
 cdef int enumToPieceVal[16]
 enumToPieceVal[<int>PieceEnum.rook] = 5
@@ -50,6 +54,9 @@ cdef int ABS(int num):
 	else:
 		return num
 
+charToPieceEnum = {'k' : PieceEnum.king, 'n' : PieceEnum.knight, 'r' : PieceEnum.rook, 'p' : PieceEnum.pawn, 'b' : PieceEnum.bishop, 'q' : PieceEnum.queen}
+for key in list(charToPieceEnum.keys()):
+	charToPieceEnum[charToPieceEnum[key]] = key
 
 cdef ulong pieceZVals[64][16]
 cdef ulong miscZVals[13]
@@ -58,37 +65,56 @@ cdef ulong genRandUlong():
 	cdef ulong rand1, rand2, rand3
 	rand1 = random.getrandbits(32)
 	rand2 = random.getrandbits(32)
-	rand3 = rand1 | (rand2 << 64)
+	rand3 = rand1 | (rand2 << 32)
+	assert(rand3 != 0)
 	return rand3
 
-cdef htable[unsigned char, char] enPassantToFile = htable[uchar, char]()
-cdef char i1
-cdef unsigned char val
-for i1 in range(0,8):
-	val = i1
-	val = (val << i1) >> 1
-	enPassantToFile[val] = i1
+
+#cdef unsigned char val
+
+
+def getRandULong():
+	return genRandUlong()
 
 
 
-
-
-
-
+cdef bint tmpBint
 def initZVals(str seed):
-	random.seed(hash(seed))
-	cdef ulong rand = genRandUlong()
-	assert(rand != (rand >> 32))
+	random.seed(seed)
+	cdef ulong rand
 	for square in range(64):
 		pieceZVals[square][0] = 0
 		for piece in range(1, 16):
 			rand = genRandUlong()
-			assert(rand != (rand >> 32))
+			tmpBint = rand != 0
+			assert tmpBint, 'rand was 0'
 			pieceZVals[square][piece] = rand
+			tmpBint = pieceZVals[square][piece] != 0
+			assert tmpBint, 'pieceZVals was 0'
 	for i in range(13):
 		rand = genRandUlong()
-		assert(rand != ((rand >> 32) << 32))
-		miscZVals = rand
+		assert(rand != 0)
+		miscZVals[i] = rand
+
+def printULong():
+	cdef ulong num
+	num = (1 << 63) | 1
+	print(num, hex(num))
+
+def printZVals(pieceToo = False):
+	cdef int i
+
+	if pieceToo:
+		for i in range(64):
+			for j in range(16):
+				print(pieceZVals[i][j], hex(pieceZVals[i][j]))
+
+	for i in range(13):
+		print(hex(miscZVals[i]))
+
+
+
+
 
 
 
@@ -137,7 +163,7 @@ IF True:
 				break'''
 		return cstr
 
-
+# extern hash table
 IF True:
 	cdef extern from "Whtable.cpp":
 		cdef struct Move:
@@ -177,6 +203,18 @@ IF True:
 		return move
 
 
+	def printMove(Move move):
+		# if enPassant
+		string = reprMove(move)
+		print(string)
+
+
+
+
+
+
+
+
 
 # BST Stuff
 IF True:
@@ -195,6 +233,22 @@ IF True:
 	cdef struct BST:
 		bstNode* root
 		int num
+
+
+	cdef bool nodeBSTExists(bstNode* node, Move val):
+		if node == NULL:
+			return 0
+		else:
+			# if this is the correct one
+			if node[0].piece == val.piece and node[0].start == val.start and node[0].end == val.end:
+				return 1
+			else:
+				return nodeBSTExists(node[0].left, val) or nodeBSTExists(node[0].right, val)
+
+
+	cdef bool bstExists(BST* bst, Move val):
+		return nodeBSTExists(bst[0].root, val)
+
 
 
 	cdef bstNode* makeBSTNode(Move* valPtr, int key):
@@ -235,7 +289,7 @@ IF True:
 			free(node)
 
 
-	cdef void deleteTree(BST* bst):
+	cdef void bstDeleteTree(BST* bst):
 		deleteNode(bst[0].root)
 		free(bst)
 
@@ -447,12 +501,48 @@ cdef inline bint capture(Move move):
 
 # reprMove
 IF True:
-	cdef str reprMove(Move item):
-		cdef str msg = ''
-		msg += str(item.piece & 0b1111) + ' at ' + str(item.start) + ' going to ' + str(item.end)
-		if item.piece >> 4:
-			msg += ' to capture ' + str(item.piece >> 4)
-		return msg
+	cdef str reprMove(Move move):
+		black = (move.piece >> 3) & 1
+		white = 1 - black
+		string = 'Move: '
+		string += 'Black ' if black else 'White '
+
+		if (move.piece >> 8) & 1:
+			string += 'EnPassant '
+		elif (move.piece >> 9) & 1:
+			string += 'Castle '
+		elif (move.piece >> 10) & 1:
+			string += 'Promotion '
+		elif (move.piece >> 11) & 1:
+			string += 'Draw flag set '
+		movingPiece = charToPieceEnum[move.piece & 0b0111]
+		if black:
+			movingPiece = movingPiece.upper()
+
+
+
+
+		string +=  movingPiece + ' from (' + str(move.start // 8) + ', ' + str(move.start % 8) + ')'
+		string += f'to '
+
+		# if theres a capture
+		if (move.piece >> 4) & 0b1111:
+
+			capturedPiece = charToPieceEnum[(move.piece >> 4) & 0b0111]
+			if white:
+				capturedPiece = capturedPiece.upper()
+			string += 'capture ' + capturedPiece + ' at '
+
+		string += f'({move.end // 8}, {move.end % 8})'
+
+		return string
+
+	cdef prntmove(Move move):
+		string = format(move.piece,'b')
+
+
+
+
 
 # reprPiecePos, isColour, isBlack, isWhite
 IF True:
@@ -533,6 +623,8 @@ cdef struct irreversibleState:
 	char enPassantFile
 	char fiftyMoveCounter
 
+
+# stack stuff
 IF True:
 	cdef struct Stack:
 		stackType* arr
@@ -599,9 +691,6 @@ IF True:
 
 
 
-
-
-
 cdef class Board:
 	cdef public int[64] Square
 	cdef public list pieceEnums
@@ -614,8 +703,10 @@ cdef class Board:
 	cdef int currentPly
 	cdef int[2] kingPositions
 	cdef Move* moveStack
-	cdef int castleZValsOffset = 1
-	cdef int enPassantZValsOffset = 5
+	cdef int gameOver
+	cdef int drawFlag
+	cdef int winner
+
 
 	cdef int enPassantFile
 
@@ -632,11 +723,11 @@ cdef class Board:
 
 
 
-	cdef void GeneratePieceMoves(self, int pos, BST* bst, int piece = 0):
-		if piece == 0:
-			piece = self.Square[pos]
+	cdef void GeneratePieceMoves(self, int pos, BST* bst):
+		cdef int piece
+		piece = self.Square[pos]
 
-		if piece in [0,1,8,9, 5, 5+8]: # dont know how to deal with these yet DEBUG
+		if piece in [0, 0+8, 1, 1+8, 5, 5+8]: # dont know how to deal with these yet DEBUG
 			return
 		cdef int maxDist
 		cdef bint black = piece > 8
@@ -725,6 +816,10 @@ cdef class Board:
 		self.stateStack[self.currentPly].enPassantFile = self.enPassantFile
 		self.stateStack[self.currentPly].fiftyMoveCounter = self.fiftyMoveCounter
 
+	cdef inline void popStateFromStack(self, int offset = 0):
+		self.castleRights = self.stateStack[self.currentPly + offset].castle
+		self.enPassantFile = self.stateStack[self.currentPly + offset].enPassantFile
+		self.fiftyMoveCounter = self.stateStack[self.currentPly + offset].fiftyMoveCounter
 
 	cpdef void genZVal(self):
 		IF True:
@@ -776,18 +871,18 @@ cdef class Board:
 
 		self.GeneratePieceMoves(pos, bst, PieceEnum.queen | (black << 3))
 		if ifCaptureTree(bst):
-			deleteTree(bst)
+			bstDeleteTree(bst)
 			return True
 		else:
-			deleteTree(bst)
+			bstDeleteTree(bst)
 
 
 		self.GeneratePieceMoves(pos, bst, PieceEnum.knight | (black << 3))
 		if ifCaptureTree(bst):
-			deleteTree(bst)
+			bstDeleteTree(bst)
 			return True
 		else:
-			deleteTree(bst)
+			bstDeleteTree(bst)
 
 		return False
 
@@ -815,16 +910,15 @@ cdef class Board:
 
 				rows = pieceEnumstr.split('/')
 
-				charToPieceEnum = {'k' : PieceEnum.king, 'n' : PieceEnum.knight, 'r' : PieceEnum.rook, 'p' : PieceEnum.pawn, 'b' : PieceEnum.bishop, 'q' : PieceEnum.queen}
 
 
 				for rank in range(8):
 
 					file = 0
-					strpos = 0
 					row = rows[rank]
+					CharInd = 0
 					while file < 8:
-						Char = row[file]
+						Char = row[CharInd]
 						if ord(Char) >= 48 and ord(Char) <= 57: # if it is a number
 							file += int(Char) # file += the integer
 						else:
@@ -842,11 +936,11 @@ cdef class Board:
 								if isBlack(pieceEnum):
 									self.kingPositions[<int>colour] = 8 * (7 - rank) + file
 									if self.blackKingPos != 0: # if there is already a black king (i.e. the fen string has 2 black kings)
-										assert(False, 'there are two black kings in the fen string')
+										assert False, 'there are two black kings in the fen string'
 									self.blackKingPos = 8 * (7 - rank) + file
 								else:
 									if self.whiteKingPos != 0:
-										assert(False, 'there are two white kings in the fen string')
+										assert False, 'there are two white kings in the fen string'
 									self.whiteKingPos = 8 * (7 - rank) + file
 
 
@@ -854,7 +948,7 @@ cdef class Board:
 							self.Square[8 * (7 - rank) + file] = charToPieceEnum[Char.lower()] | colour
 
 							file += 1
-						strpos += 1
+						CharInd += 1
 				if fenString == DefaultFenString:
 					print('starting config')
 				elif fenString == '8/8/8/8/8/8/8/8 w KQkq - 0 1':
@@ -871,10 +965,10 @@ cdef class Board:
 				else:
 					self.CastleBool = True
 					# setting the individual castling permissions
-					self.castleRights |= 1 >> 0 if 'K' in castling else 0
-					self.castleRights |= 1 >> 1 if 'Q' in castling else 0
-					self.castleRights |= 1 >> 2 if 'k' in castling else 0
-					self.castleRights |= 1 >> 3 if 'q' in castling else 0
+					self.castleRights |= 1 << 0 if 'K' in castling else 0
+					self.castleRights |= 1 << 1 if 'Q' in castling else 0
+					self.castleRights |= 1 << 2 if 'k' in castling else 0
+					self.castleRights |= 1 << 3 if 'q' in castling else 0
 
 
 				#doing the move counters
@@ -897,8 +991,46 @@ cdef class Board:
 		self.stateStack = <irreversibleState*>malloc(MAXGAMELENGTH*size(irreversibleState))
 		self.moveStack = <Move*>malloc(MAXGAMELENGTH * size(Move))
 
-		for i in range(4):
-			self.castleZVals[i] = miscZVals[1 + i]
+		self.gameOver = 0
+		self.winner = 0
+		self.drawFlag = 0
+		self.genZVal()
+
+
+
+
+	def pyRemovePiece(self, pos):
+		self.removePiece(pos)
+
+	def pyDoCastle(self,black, kingside):
+		black = 1 if black else 0
+		kingside = 1 if kingside else 0
+
+		rank = black * 7
+		file = 7 * kingside
+
+		cdef Move move
+		move.start = rank * 8 + 4 # 4 is the file of the king
+		move.end = rank * 8 + file
+		move.piece = PieceEnum.king | (black << 3)
+		move.piece |= 1 << 9 # the castling flag
+
+		printMove(move)
+
+		self.makeMove(move)
+
+	cdef debMakeMove(self, Move move):
+		cdef ulong previous = self.ZVal
+		cdef ulong after, tmp
+
+		self.makeMove(move)
+		after = self.ZVal
+		self.undoMove()
+
+
+
+
+
 
 	cdef inline void transferPiece(self, int start, int end):
 		#DEBUG
@@ -912,9 +1044,6 @@ cdef class Board:
 		self.ZVal ^= pieceZVals[start][self.Square[start]]
 		self.Square[start] = 0
 
-	def pyRemovePiece(self, pos):
-		self.removePiece(pos)
-
 	cdef inline void removePiece(self, int pos):
 		#DEBUG
 		assert(self.Square[pos] != 0)
@@ -924,7 +1053,7 @@ cdef class Board:
 		self.ZVal ^= pieceZVals[pos][self.Square[pos]]
 		self.Square[pos] = 0
 
-	cdef inline addPiece(self, int pos, int piece):
+	cdef inline void addPiece(self, int pos, int piece):
 		#DEBUG
 		assert(self.Square[pos] == 0)
 
@@ -936,7 +1065,10 @@ cdef class Board:
 	def getPieceIndex(self, index):
 		return self.Square[index]
 
-	def doNormalMove(self, start, end):
+	def pyUndoMove(self):
+		self.undoMove()
+
+	cdef Move genPyNormalMove(self, start, end):
 		IF True:
 			assert(self.Square[start] != 0)
 			cdef Move move
@@ -948,41 +1080,134 @@ cdef class Board:
 			move.piece |= self.Square[end] << 4
 			move.start = <char>start
 			move.end = <char>end
-			print("Move:")
-			print(format(move.piece,'b'))
-			print(format(move.start,'b'), format(start,'b'))
-			print(format(move.end,'b'), format(end,'b'))
+
+			return move
+	
+	
+	cdef bool moveLegal(self, Move move):
+		cdef BST bst
+		bst.root = NULL
+		bst.num = 0
+		self.GeneratePieceMoves(move.start, &bst)
+		cdef bool exists = bstExists(&bst, move)
+		bstDeleteTree(&bst)
+		return exists
+
+		
+		
+
+	def pyDoNormalMove(self, start, end):
+		cdef Move move
+		move = self.genPyNormalMove(start, end)
+		assert(self.moveLegal(move), 'Move: ' + reprMove(move) + ' is not legal')
+
+		self.makeMove(move)
 
 
 
-			self.makeMove(move)
+
+	cdef Move genPyPromotion(self, start, end, newPiece : str):
+		IF True:
+			cdef Move move
+			move.start = 0
+			move.end = 0
+			move.piece = 0
+
+			cdef int white, black
+
+			white = (self.Square[start] & 0b1000) > 0
+			black = 1 - white
+			move.start = start
+			move.end = end
+
+			move.piece |= PieceEnum.pawn | (white << 3)
+			move.piece |= self.Square[end] << 4
+			move.piece |= 1 << 10 # promotion flag
+
+			cdef int replacementPiece = 0
+			replacementPiece = charToPieceEnum(newPiece.lower())
+			replacementPiece |= white << 3
+			move.piece |= replacementPiece << 12
+
+			return move
 
 
 
-	cdef void doIrreversibleChanges(self, irreversibleState old, irreversibleState new):
+
+
+
+
+
+
+
+
+
+
+
+
+
+	def pyDoPromotion(self, start, replacement, end = None):
+		black = (start // 8) == 1
+		white = not black
+		endFile = start % 8 if (end == None) else end % 8
+		endRank = 0 if black else 7
+		endPos = endRank * 8 + endFile
+
+		capture = self.Square[endPos]
+
+		replacement = charToPieceEnum[replacement.lower()]
+		if black:
+			replacement = replacement | PieceEnum.black
+		cdef Move move
+		move.piece = PieceEnum.pawn ; move.piece |= PieceEnum.black if black else 0
+		move.piece |= capture << 4
+		move.piece |= replacement << 12
+
+		move.piece |= 1 << 10
+
+		printMove(move)
+		self.makeMove(move)
+
+
+
+	def pyDoWholeMove(self):
+
+
+
+
+
+
+		pass
+
+
+
+
+
+
+
+
+
+
+	cdef void doIrreversibleZChanges(self, irreversibleState old, irreversibleState New):
 		cdef int index
 		cdef int different
 
 		# if castle rights change then change ZVal
-		different = old.castle ^ new.castle
+		different = old.castle ^ New.castle
 		if different:
 			for index in range(4):
 				if (different >> index) & 1:
-					self.ZVal ^= miscZVals[self.castleZValsOffset + index]
+					self.ZVal ^= miscZVals[castleZValsOffset + index]
 
-		# if enPassant is involved
-		if not (old.enPassantFile == -1 and new.enPassantFile == -1):
 
-			# if old enPassant and new is not
-			if old.enPassantFile == -1 and new.enPassantFile != -1:
-				self.ZVal ^= miscZVals[self.enPassantZValsOffset + old.enPassantFile]
-			# if new enPassant and old is not
-			elif old.enPassantFile != -1 and new.enPassantFile == -1:
-				self.ZVal ^= miscZVals[self.enPassantZValsOffset + new.enPassantFile]
-			# else if both are enPassant
-			else:
-				self.ZVal ^= miscZVals[self.enPassantZValsOffset + old.enPassantFile]
-				self.ZVal ^= miscZVals[self.enPassantZValsOffset + new.enPassantFile]
+		# do enPassant
+		if old.enPassantFile != -1:
+			self.ZVal ^= miscZVals[enPassantZValsOffset + old.enPassantFile]
+		if New.enPassantFile != -1:
+			self.ZVal ^= miscZVals[enPassantZValsOffset + New.enPassantFile]
+
+
+
 
 
 
@@ -996,7 +1221,61 @@ cdef class Board:
 		cdef int oldPly = self.currentPly - 1
 		cdef int oldBlack = 1 - self.BlackToPlay
 		cdef int oldWhite = self.BlackToPlay
-		cdef Move oldMove = self.stateStack[oldPly]
+		cdef Move move = self.moveStack[oldPly]
+
+		self.gameOver = 0
+		self.drawFlag = 0
+		self.winner = 0
+		self.doIrreversibleZChanges(self.stateStack[self.currentPly], self.stateStack[oldPly])
+		self.fiftyMoveCounter = self.stateStack[oldPly].fiftyMoveCounter
+
+		# if a flagged move (but not promotion)
+		if (move.piece >> 8) & 0b1011:
+
+			# if en passant
+			if (move.piece >> 8) & 1:
+
+				# position of captured pawn
+				# 					file          +  rank  *  8
+				# replacing the captured pawn
+				self.addPiece((move.end % 8) + (3 + oldWhite) * 8, PieceEnum.pawn | (oldWhite << 3))
+
+				# moving (back) the pawn doing the en passant
+				self.transferPiece(move.end, move.start)
+			# else if rooking
+			elif (move.piece >> 9) & 1:
+				# if kingside
+				if (move.end % 8) == 7:
+					# move king (back) # most of this is just switching the to and from squares
+					self.transferPiece(move.start + 2, move.start)
+					self.kingPositions[oldBlack] = move.start
+					# move rook
+					self.transferPiece(move.start + 1, move.start  + 3)
+				else: # if queenside
+					# move king
+					self.transferPiece(move.start - 2, move.start)
+					self.kingPositions[oldBlack] = move.start
+					# move rook
+					self.transferPiece(move.start - 1, move.start - 4)
+			# promotion handled later
+
+		# else if a normal move (or promotion)
+		else:
+			# if there is a capture
+			if (move.piece >> 4) & 0b1111:
+				self.transferPiece(move.end, move.start)
+				self.addPiece(move.end, (move.piece >> 4) & 0b1111) # add the captured piece back
+			else:
+				# if no capture
+				self.transferPiece(move.end, move.start)
+
+			# if promotion
+			if (move.piece >> 10) & 1:
+				self.removePiece(move.start) # doing stuff at the start because stuff above would move the promoted piece back to where the pawn was
+				self.addPiece(move.start, move.piece & 0b1111) # swap promoted piece for pawn
+
+
+		self.popStateFromStack(<int>-1)
 
 
 
@@ -1015,21 +1294,27 @@ cdef class Board:
 
 
 
-	cdef bint makeMove(self, Move move):
-		cdef bint black  = (move.piece & 0b1000) > 0
+
+
+
+
+	cdef void makeMove(self, Move move):
+		cdef bint black = (move.piece & 0b1000) > 0
 		cdef bint white = (move.piece & 0b1000) == 0
 		checkBint(black)
 		checkBint(white)
+
+		self.moveStack[self.currentPly] = move
 
 		self.currentPly += 1
 		self.fiftyMoveCounter += 1
 
 
 
-		# if not a normal move, if flags are set
-		if move.piece >> 8:
+		# if not a normal move, if flags (except promotion) are set
+		if (move.piece >> 8) & 0b1011:
 			# if not a draw then all flagged moves reset fify move counter
-			if (move.piece >> 11) & 1:
+			if not (move.piece >> 11) & 1:
 				self.fiftyMoveCounter = 0
 
 			# if en passant
@@ -1044,19 +1329,12 @@ cdef class Board:
 			# else if rooking
 			elif (move.piece >> 9) & 1:
 				# setting castling rights
-				if black:
-					# removes blacks right to castle
-					self.castleRights &= 0b1100
-				else:
-					#removes whites right to castle
-					self.castleRights &= 0b0011
-
-
+				self.clearCastleRights(black)
 				# if kingside
-				if (move.end % 8) == 6 or (move.end % 8) == 7:
+				if (move.end % 8) == 7 or (move.end % 8) == 6:
 					# move king
-					self.transferPiece(move.start, move.start + 1)
-					self.kingPositions[black] = move.start + 1
+					self.transferPiece(move.start, move.start + 2)
+					self.kingPositions[black] = move.start + 2
 					# move rook
 					self.transferPiece(move.start + 3, move.start  + 1)
 				else: # if queenside
@@ -1065,15 +1343,14 @@ cdef class Board:
 					self.kingPositions[black] = move.start - 2
 					# move rook
 					self.transferPiece(move.start - 4, move.start - 1)
-			# else if promotion
-			elif (move.piece >> 10) & 1:
-				self.removePiece(move.start)
-				self.addPiece(move.end, move.piece >> 12)
+			# promotion handled later
+			# else if a draw
+			elif (move.piece >> 11) & 1:
+				self.gameOver = 1
+				self.drawFlag = 1
 
-			# TODO draw system
-			#elif (move.piece >> 11) & 1: <- the draw flag
 
-		# else if a normal move
+		# else if a normal move (or promotion)
 		else:
 			# if there is a capture
 			if (move.piece >> 4) & 0b1111:
@@ -1091,6 +1368,15 @@ cdef class Board:
 				if move.piece & 0b0111 == PieceEnum.pawn and ABS(<int> (move.start - move.end)) == 16:
 					self.enPassantFile = move.end % 8
 
+		# if promotion
+		if (move.piece >> 10) & 1:
+			# the pawn has already moved (and possibly captured), so just need to replace pawn with promotion piece
+			self.removePiece(move.end)
+			self.addPiece(move.end, move.piece >> 12 )
+			self.fiftyMoveCounter = 0
+
+		self.pushStateToStack()
+		self.doIrreversibleZChanges(self.stateStack[self.currentPly - 1], self.stateStack[self.currentPly])
 
 
 
@@ -1113,30 +1399,8 @@ cdef class Board:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 	cdef inline void clearCastleRights(self, bint black):
-		if black:
-			self.castleRights &= 0b1100
-		else:
-			self.castleRights &= 0b0011
+		self.castleRights &= 0b1100 if black else 0b0011
 
 
 
