@@ -2,7 +2,6 @@ import pygame
 import numpy as np
 import Wchess as chess
 import os
-redlst = ["red"] * 1000
 
 def flipy(arr):
 	maxrow = arr.shape[0] - 1
@@ -23,14 +22,15 @@ sqrSize = height // 8
 maxFPS = 15
 
 images = {}
-
-light = pygame.Color(0xE8, 0xDE, 0xD1);
-dark = pygame.Color(0xA0, 0x81, 0x6C)
-red = pygame.Color(0xFF, 0x00, 0x00);
-orange = pygame.Color(255, 215, 0)
-green = pygame.Color(0, 0xFF, 0);
-blue = pygame.Color(0, 0, 0xFF)
-yellow = pygame.Color(0xFF, 0xFF, 0)
+# declaring colours
+if True:
+	light = pygame.Color(0xE8, 0xDE, 0xD1);
+	dark = pygame.Color(0xA0, 0x81, 0x6C)
+	red = pygame.Color(0xFF, 0x00, 0x00);
+	orange = pygame.Color(255, 215, 0)
+	green = pygame.Color(0, 0xFF, 0);
+	blue = pygame.Color(0, 0, 0xFF)
+	yellow = pygame.Color(0xFF, 0xFF, 0)
 
 
 def loadImages():

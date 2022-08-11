@@ -1,4 +1,4 @@
-import dirs
+from archive import dirs
 
 dirs.computeDistanceInfo()
 dirs.ComputePieceDirs()

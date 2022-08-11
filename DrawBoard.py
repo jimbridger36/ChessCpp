@@ -1,6 +1,7 @@
 import pygame
 import numpy as np
-import chess
+from archive import chess
+
 redlst = ["red"] * 1000
 
 def flipy(arr):

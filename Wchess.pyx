@@ -165,7 +165,7 @@ IF True:
 
 # extern hash table
 IF True:
-	cdef extern from "Whtable.cpp":
+	cdef extern from "InPycharmProject/Whtable.cpp":
 		cdef struct Move:
 			short piece
 			char start
@@ -240,7 +240,7 @@ IF True:
 			return 0
 		else:
 			# if this is the correct one
-			if node[0].piece == val.piece and node[0].start == val.start and node[0].end == val.end:
+			if node[0].val.piece == val.piece and node[0].val.start == val.start and node[0].val.end == val.end:
 				return 1
 			else:
 				return nodeBSTExists(node[0].left, val) or nodeBSTExists(node[0].right, val)
@@ -723,11 +723,11 @@ cdef class Board:
 
 
 
-	cdef void GeneratePieceMoves(self, int pos, BST* bst):
-		cdef int piece
-		piece = self.Square[pos]
+	cdef void GeneratePieceMoves(self, int pos, BST* bst, int piece = 0):
+		if piece == 0:
+			piece = self.Square[pos]
 
-		if piece in [0, 0+8, 1, 1+8, 5, 5+8]: # dont know how to deal with these yet DEBUG
+		if piece in [0, 0+8, 1, 1+8, 5, 5+8]: # don't know how to deal with these yet DEBUG
 			return
 		cdef int maxDist
 		cdef bint black = piece > 8
@@ -860,8 +860,9 @@ cdef class Board:
 
 
 	cdef bool inCheck(self, bint black, int pos = 70):
-		cdef BST bstOBJ
+		# TODO sort out pawn stuff
 		checkBint(black)
+		cdef BST bstOBJ
 		bstOBJ.root = NULL
 		bstOBJ.num = 0
 		cdef BST* bst
@@ -869,20 +870,58 @@ cdef class Board:
 		if pos == 70:
 			pos = self.kingPositions[black]
 
-		self.GeneratePieceMoves(pos, bst, PieceEnum.queen | (black << 3))
-		if ifCaptureTree(bst):
-			bstDeleteTree(bst)
-			return True
-		else:
-			bstDeleteTree(bst)
+
+		cdef Move move
 
 
-		self.GeneratePieceMoves(pos, bst, PieceEnum.knight | (black << 3))
-		if ifCaptureTree(bst):
-			bstDeleteTree(bst)
+
+		cdef bool INCHECK = False
+
+		# first index is the number of checks (bishop/queen then rook/queen then knight/knight)
+		# second index is the things to check for (first is what to check with (and also what to check for, second is only what to check for)
+		cdef int lookFor[3][2]
+		IF True:
+			lookFor[0][0] = PieceEnum.bishop
+			lookFor[0][1] = PieceEnum.queen
+			lookFor[1][0] = PieceEnum.rook
+			lookFor[1][1] = PieceEnum.queen
+			lookFor[2][0] = PieceEnum.knight
+			lookFor[2][1] = PieceEnum.knight
+
+
+		cdef ind check = 0
+
+		cdef llist[Move] ll = llist[Move]()
+		cdef llist[Move].iterator ITER
+		cdef int numMoves
+		cdef int capturedPieceType
+
+		# checks for bishops, queens, knights, rooks
+		while check < 3 and not INCHECK:
+			self.GeneratePieceMoves(pos, bst, lookFor[check][0] | (black << (4-1) ))
+			bstTraversePop(bst, &ll)
+			ITER = ll.begin()
+
+			numMoves = ll.size()
+
+			for i in range(numMoves):
+				move = deref(ITER)
+				capturedPieceType = (move.piece >> 4) & 0b0111
+				if capturedPieceType != 0 and (capturedPieceType == lookFor[check][0] or capturedPieceType == lookFor[check][0]):
+					INCHECK = True
+					break
+				preincrement(ITER)
+			ll.clear()
+
+		if INCHECK:
 			return True
-		else:
-			bstDeleteTree(bst)
+
+		#TODO check if threatened by king, pawn
+
+
+
+
+
 
 		return False
 
@@ -1002,7 +1041,7 @@ cdef class Board:
 	def pyRemovePiece(self, pos):
 		self.removePiece(pos)
 
-	def pyDoCastle(self,black, kingside):
+	def pyDoCastle(self, black, kingside):
 		black = 1 if black else 0
 		kingside = 1 if kingside else 0
 
@@ -1022,10 +1061,18 @@ cdef class Board:
 	cdef debMakeMove(self, Move move):
 		cdef ulong previous = self.ZVal
 		cdef ulong after, tmp
-
 		self.makeMove(move)
 		after = self.ZVal
-		self.undoMove()
+
+		for i in range(2):
+			self.undoMove()
+			assert(self.ZVal == previous, 'Move: ' + reprMove(move) + ' when undone gave a different ZVal')
+			self.makeMove(move)
+			assert(self.ZVal == after, 'Move: ' + reprMove(move) + 'when done and undone and done again gave a different ZVal')
+
+
+
+
 
 
 
@@ -1082,6 +1129,19 @@ cdef class Board:
 			move.end = <char>end
 
 			return move
+
+	cdef Move genPyCastleMove(self, start, end):
+		cdef Move move
+		move.start = start
+		move.end = end
+		move.piece = self.Square[move.start]
+
+
+
+
+
+
+
 	
 	
 	cdef bool moveLegal(self, Move move):
@@ -1101,7 +1161,7 @@ cdef class Board:
 		move = self.genPyNormalMove(start, end)
 		assert(self.moveLegal(move), 'Move: ' + reprMove(move) + ' is not legal')
 
-		self.makeMove(move)
+		self.debMakeMove(move)
 
 
 
@@ -1147,26 +1207,27 @@ cdef class Board:
 
 
 	def pyDoPromotion(self, start, replacement, end = None):
-		black = (start // 8) == 1
-		white = not black
-		endFile = start % 8 if (end == None) else end % 8
-		endRank = 0 if black else 7
-		endPos = endRank * 8 + endFile
+		IF True:
+			black = (start // 8) == 1
+			white = not black
+			endFile = start % 8 if (end == None) else end % 8
+			endRank = 0 if black else 7
+			endPos = endRank * 8 + endFile
 
-		capture = self.Square[endPos]
+			capture = self.Square[endPos]
 
-		replacement = charToPieceEnum[replacement.lower()]
-		if black:
-			replacement = replacement | PieceEnum.black
-		cdef Move move
-		move.piece = PieceEnum.pawn ; move.piece |= PieceEnum.black if black else 0
-		move.piece |= capture << 4
-		move.piece |= replacement << 12
+			replacement = charToPieceEnum[replacement.lower()]
+			if black:
+				replacement = replacement | PieceEnum.black
+			cdef Move move
+			move.piece = PieceEnum.pawn ; move.piece |= PieceEnum.black if black else 0
+			move.piece |= capture << 4
+			move.piece |= replacement << 12
 
-		move.piece |= 1 << 10
+			move.piece |= 1 << 10
 
-		printMove(move)
-		self.makeMove(move)
+			printMove(move)
+			self.makeMove(move)
 
 
 
