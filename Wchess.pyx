@@ -32,6 +32,9 @@ DEF enPassantZValsOffset = 5
 
 
 cdef int enumToPieceVal[16]
+
+for i in range(16):
+	enumToPieceVal[i] = 0
 enumToPieceVal[<int>PieceEnum.rook] = 5
 enumToPieceVal[<int>PieceEnum.knight] = 3
 enumToPieceVal[<int>PieceEnum.queen] = 8
@@ -165,17 +168,17 @@ IF True:
 
 # extern hash table
 IF True:
-	cdef extern from "InPycharmProject/Whtable.cpp":
+	cdef extern from "InPycharmProject2/Whtable.cpp":
 		cdef struct Move:
 			short piece
 			char start
 			char end
 
 
-		cdef cppclass ht:
-			ht()
-			ht(int empty)
-			ht(char* file, int readreps)
+		cdef cppclass HT:
+			HT()
+			HT(int empty)
+			HT(char* file, int readreps)
 
 			void writeToFile(char* file, int writeRepetitions)
 			void readIndexesFromFile(char* file)
@@ -337,25 +340,25 @@ IF True:
 
 
 VecToIntMat= np.array([[-18, -17, -16, -15, -14],
-				       [-10,  -9,  -8,  -7,  -6],
-				       [ -2,  -1,   0,   1,   2],
-				       [  6,   7,   8,   9,  10],
-				       [ 14,  15,  16,  17,  18]], dtype=np.int32)
+					   [-10,  -9,  -8,  -7,  -6],
+					   [ -2,  -1,   0,   1,   2],
+					   [  6,   7,   8,   9,  10],
+					   [ 14,  15,  16,  17,  18]], dtype=np.int32)
 
 
 # to access the distance you can go in the direction, +8, to directions[rank,file,+8+18], ALWAYS ADD 18
 # doing direction stuff
 if True:
 	directionsVec = {PieceEnum.rook : np.array( [[1,0], [-1,0], [0,1], [0,-1]] ),
-	              PieceEnum.bishop : np.array( [[1,1], [1,-1], [-1,1], [-1,-1]] ),
-	              PieceEnum.queen : np.array([[1,0], [-1,0], [0,1], [0,-1],[1,1], [1,-1], [-1,1], [-1,-1]]),
-	              PieceEnum.knight : np.array( [[2,1], [2,-1], [-2,1], [-2,-1], [1,2], [1,-2], [-1,2], [-1,-2]] )
-	              }
+				  PieceEnum.bishop : np.array( [[1,1], [1,-1], [-1,1], [-1,-1]] ),
+				  PieceEnum.queen : np.array([[1,0], [-1,0], [0,1], [0,-1],[1,1], [1,-1], [-1,1], [-1,-1]]),
+				  PieceEnum.knight : np.array( [[2,1], [2,-1], [-2,1], [-2,-1], [1,2], [1,-2], [-1,2], [-1,-2]] )
+				  }
 	import copy
 	directions = {PieceEnum.rook : [],
-	              PieceEnum.bishop : [],
-	              PieceEnum.queen : [],
-	              PieceEnum.knight : []
+				  PieceEnum.bishop : [],
+				  PieceEnum.queen : [],
+				  PieceEnum.knight : []
 	}
 
 	for piece in [PieceEnum.rook, PieceEnum.bishop, PieceEnum.queen, PieceEnum.knight]:
@@ -371,6 +374,7 @@ if True:
 
 def pcpy(str):
 	printStuff(pyStringToC(str))
+
 
 
 intToPieceString = {
@@ -415,6 +419,8 @@ IF True:
 	def getDistanceSquare():
 		return distanceSquare
 
+
+# ported
 # computeDistanceInfo
 IF True:
 	def computeDistanceInfo():
@@ -483,7 +489,7 @@ IF True:
 
 
 
-
+# PORTED
 # declaring PiecePos and makePiecePos
 IF True:
 	cdef public struct PiecePos:
@@ -591,6 +597,7 @@ cdef class Piece:
 	cdef public int pos
 
 
+# PORTED
 cdef int colEnPasRank[2]
 colEnPasRank[0] = 3
 colEnPasRank[1] = 4
@@ -598,6 +605,7 @@ colEnPasRank[1] = 4
 
 
 
+# PORTED
 
 # isOfType
 IF True:
@@ -621,7 +629,7 @@ IF True:
 cdef struct irreversibleState:
 	char castle
 	char enPassantFile
-	char fiftyMoveCounter
+	short fiftyMoveCounter
 
 
 # stack stuff
@@ -697,7 +705,7 @@ cdef class Board:
 	cdef bint BlackToPlay
 	cdef int fiftyMoveCounter, fullMoves
 	cdef int whiteKingPos, blackKingPos
-	cdef ht table
+	cdef HT table
 	cdef ulong ZVal
 	cdef irreversibleState* stateStack
 	cdef int currentPly
@@ -1022,9 +1030,9 @@ cdef class Board:
 		cdef char* cFile = pyStringToC(htableFile)
 		printStuff(cFile)
 		if htableFile == "none":
-			self.table = ht(<int>0)
+			self.table = HT(<int>0)
 		else:
-			self.table = ht(cFile, 0)
+			self.table = HT(cFile, 0)
 		free(cFile)
 
 		self.stateStack = <irreversibleState*>malloc(MAXGAMELENGTH*size(irreversibleState))
@@ -1332,7 +1340,7 @@ cdef class Board:
 
 			# if promotion
 			if (move.piece >> 10) & 1:
-				self.removePiece(move.start) # doing stuff at the start because stuff above would move the promoted piece back to where the pawn was
+				self.removePiece(move.end) # doing stuff at the start because stuff above would move the promoted piece back to where the pawn was
 				self.addPiece(move.start, move.piece & 0b1111) # swap promoted piece for pawn
 
 

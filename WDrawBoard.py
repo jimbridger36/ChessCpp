@@ -3,6 +3,8 @@ import numpy as np
 import Wchess as chess
 import os
 
+import cppChess
+
 def flipy(arr):
 	maxrow = arr.shape[0] - 1
 	newArr = np.zeros(arr.shape)
@@ -140,7 +142,7 @@ def b(num):
 	initial = format(num, 'b')
 	remainder = len(initial) % 4
 	if remainder == 0:
-		return initial
+		return initial, len(initial), 'bits'
 	else:
 		initial = ('0' * (4 - remainder)) + initial
 		return initial, len(initial), 'bits'
@@ -195,9 +197,6 @@ z[2] = h(bg.getZ()), 'after undoing'
 bg.setPiece(pe.pawn, 6, 4)
 z[3] = h(bg.getZ()), 'before promotion'
 draw()
-
-
-
 
 
 

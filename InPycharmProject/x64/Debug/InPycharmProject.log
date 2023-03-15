@@ -1,1 +1,9 @@
-﻿  Whtable.cpp
+﻿  Board.cpp
+x64\Debug\Universal.obj : warning LNK4042: object specified more than once; extras ignored
+x64\Debug\Info.obj : warning LNK4042: object specified more than once; extras ignored
+x64\Debug\StartUpFunctions.obj : warning LNK4042: object specified more than once; extras ignored
+x64\Debug\Whtable.obj : warning LNK4042: object specified more than once; extras ignored
+x64\Debug\ZStuff.obj : warning LNK4042: object specified more than once; extras ignored
+InPycharmProject.obj : error LNK2019: unresolved external symbol "public: __cdecl Whtable::HT::HT(void)" (??0HT@Whtable@@QEAA@XZ) referenced in function "public: __cdecl Board::BOARD::BOARD(void)" (??0BOARD@Board@@QEAA@XZ)
+InPycharmProject.obj : error LNK2019: unresolved external symbol "public: __cdecl Whtable::HT::HT(char * const,int)" (??0HT@Whtable@@QEAA@QEADH@Z) referenced in function "public: __cdecl Board::BOARD::BOARD(void)" (??0BOARD@Board@@QEAA@XZ)
+C:\Users\Jim\PyCharmProjects\ChessCPPAttemptBStrap\InPycharmProject\x64\Debug\InPycharmProject.exe : fatal error LNK1120: 2 unresolved externals

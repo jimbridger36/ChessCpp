@@ -18,22 +18,37 @@
     <ClCompile Include="InPycharmProject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Source.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Info.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ZStuff.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BSTStuff.cpp">
+    <ClCompile Include="ZStuff.h">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Whtable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="StartUpFunctions.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Universal.h">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Board.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Universal.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ZStuff.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Whtable.h">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Info.h">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StartUpFunctions.h">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
