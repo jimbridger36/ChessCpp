@@ -1,1 +1,0 @@
-C:\Users\Jim\PyCharmProjects\ChessCPPAttemptBStrap\venv\Scripts\python.exe testFolder/setup.py build_ext --inplace

@@ -1,1 +1,0 @@
-/Library/Developer/CommandLineTools/usr/bin/c++  -g -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX11.3.sdk -Wl,-search_paths_first -Wl,-headerpad_max_install_names  CMakeFiles/chessCPP.dir/main.cpp.o CMakeFiles/chessCPP.dir/htSRC.cpp.o CMakeFiles/chessCPP.dir/SetUpData.cpp.o  -o chessCPP 
