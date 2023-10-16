@@ -9,11 +9,18 @@
 namespace Debug {
 	void printDirectionInfoFlat();
 
-	void saveDistanceInfoFlatToFile(const char* fileName = "DebugOutput.txt");
+	void savedistanceInfoAdd18ToFile(const char* fileName = "DebugOutput.txt");
 
-	void genAllMovesDB(Board::BOARD board);
+	Move* genAllMovesDB(Board::BOARD &board, int& num);
 
 	int* getDirInfoPointer();
 
-	int* getDistInfoFlat();
+	int* getDistInfoFlat(int* ptr);
+
+	void checkDistance(bool printTrue);
+
+	void printAttack0D(Board::BOARD &board);
+
+	ulong printZVal(Board::BOARD &board);
+
 }

@@ -6,6 +6,8 @@ import numpy as np
 import os
 
 
+fens = {"bishop bishop rook" : "5k2/8/B7/8/5r2/8/3B4/4K3 w - - 0 1"}
+
 
 def flipy(arr):
 	maxrow = arr.shape[0] - 1
@@ -72,6 +74,8 @@ def main():
 		drawPieces(screen, board.getSquare())
 
 	'''
+
+
 def drawSquares(screen, squares: list = None):  # black                       white
 	colours = {
 		0       : dark,
@@ -82,6 +86,9 @@ def drawSquares(screen, squares: list = None):  # black                       wh
 		'orange': orange,
 		'yellow': yellow
 	}
+	if squares != None:
+		for index, pair in enumerate(squares):
+			squares[index] = (squares[index][0], squares[index][1])
 
 	for rank in range(7,-1,-1):
 		for file in range(8):
@@ -137,7 +144,6 @@ def attack(rank, file = -1):
 	draw(lst)
 
 
-chess.initAll(1)
 
 def B(num):
 	initial = format(num, 'b')
@@ -152,8 +158,6 @@ def B(num):
 
 	return newstr, len(initial), 'bits'
 
-print(B(0b1010))
-print
 
 
 def h(num):
@@ -191,7 +195,7 @@ directionsVec = {PieceEnum.rook  : np.array([[1, 0], [-1, 0], [0, 1], [0, -1]]),
 z = [None] * 5
 
 
-board = chess.pyBoard()
+board = chess.pyBoard(fens["bishop bishop rook"])
 b = board
 main()
 draw()
@@ -209,28 +213,26 @@ draw()
 '''
 
 
-#distance debugging shenaniganery
-if True:
 
 
 
+p = chess.StringToPos
+sq = list(np.zeros((8,8)))
+
+chess.pyCheckDist()
+print("dist Checked")
+v = b.getAllRed(0)
 
 
-	pass
+#import cppDebug
 
+b.printZ()
+print(p('d2'), p('c3'))
+b.doNormalMove(p('d2'), p('c3'))
+b.printZ()
+b.pyUndoMove()
+b.printZ()
 
-
-
-
-sq = [[0] * 8] * 8
-
-#a = chess.getAllRed(board, 1)
-#b = chess.getAllRed(board, 0)
-
-a = chess.getDirInfo()
-b = chess.getDistInfo()
-
-import cppDebug
 
 
 

@@ -16,6 +16,9 @@ C:\Users\Jim\PyCharmProjects\ChessCPPAttemptBStrap\InPycharmProject2\BoardMoveGe
 C:\Users\Jim\PyCharmProjects\ChessCPPAttemptBStrap\InPycharmProject2\Board.h(147,3): warning C4554: '<<': check operator precedence for possible error; use parentheses to clarify precedence
   Debug.cpp
 C:\Users\Jim\PyCharmProjects\ChessCPPAttemptBStrap\InPycharmProject2\Board.h(147,3): warning C4554: '<<': check operator precedence for possible error; use parentheses to clarify precedence
+C:\Users\Jim\PyCharmProjects\ChessCPPAttemptBStrap\InPycharmProject2\Debug.cpp(72,26): warning C4552: '<': result of expression not used
+C:\Users\Jim\PyCharmProjects\ChessCPPAttemptBStrap\InPycharmProject2\Debug.cpp(73,27): warning C4552: '<': result of expression not used
+C:\Users\Jim\PyCharmProjects\ChessCPPAttemptBStrap\InPycharmProject2\Debug.cpp(88,27): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
   InPycharmProject2.cpp
 C:\Users\Jim\PyCharmProjects\ChessCPPAttemptBStrap\InPycharmProject2\Board.h(147,3): warning C4554: '<<': check operator precedence for possible error; use parentheses to clarify precedence
   Info.cpp

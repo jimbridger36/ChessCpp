@@ -4,13 +4,13 @@
 namespace StartUpFunctions {
 	void InitAll(int ZSeed);
 
-	void setUpColourEnPassantRank();
+	//void setUpColourEnPassantRank();
 
 	void setUpDirectionInfoFlat();
 
-	void setUpDistanceInfoFlat();
+	void setUpdistanceInfoAdd18();
 
-	void loadDistanceInfoFlat();
+	void loaddistanceInfoAdd18();
 
 	void setCharToPieceArray();
 }

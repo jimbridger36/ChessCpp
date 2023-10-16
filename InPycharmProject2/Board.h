@@ -34,7 +34,8 @@ namespace Board {
 	class BOARD {
 	public:
 		int Square[64];
-		ulong Attacked[2] = { 0,0 };
+		
+		ulong Attacked[2] = {0,0};
 
 
 		int* getSquarePtr() {
@@ -48,8 +49,9 @@ namespace Board {
 		}
 
 
-		int fiftyMoveCounter;
+		//int fiftyMoveCounter;
 		int currentPly;
+
 		Whtable::HT ht;
 		int kingPosition[2];
 		// PieceLists, possibly with own array;
@@ -69,6 +71,12 @@ namespace Board {
 			return (ulong*) & this->Attacked;
 		}
 
+		ulong getAttacked(int index) {
+			return Attacked[index];
+		}
+
+		void setAttack(int col, ulong value);
+		void printAttack0();
 
 		char fileHT[fileCharLength];
 
@@ -76,7 +84,7 @@ namespace Board {
 		void inline addPiece(int pos, int piece);
 		void inline removePiece(int pos);
 		void inline transferPiece(int src, int dst);
-		void inline clearCastleRights();
+		//void inline clearCastleRights();
 		void inline clearCastleRights(int colour);
 		void inline clearCastleRights(int colour, int kingside);
 		void inline setEnPFile(int newFile);
@@ -84,8 +92,10 @@ namespace Board {
 		void makeMove(Move move);
 		void unmakeMove();
 
-		void genMoves(int pos, std::list<Move> **lst);
-		void genAllMoves(std::list<Move>** lst);
+
+		void genMoves(int col, std::list<Move>* lst);
+		void genPosMoves(int pos, std::list<Move> *lst);
+		void genBothSidesMoves(std::list<Move> *lst);
 
 
 		void doIrreversibleZChanges();
@@ -110,7 +120,7 @@ namespace Board {
 
 
 	void inline BOARD::addPiece(int pos, int piece) {
-		assert(this->Square[pos] == 0);
+		assertD(this->Square[pos] == 0);
 
 		this->materialBalance += Info::enumToPieceVal[piece];
 
@@ -128,7 +138,7 @@ namespace Board {
 	}
 
 	void inline BOARD::transferPiece(int src, int dst) {
-		assert(Square[dst] == 0);
+		assertD(Square[dst] == 0);
 
 		// putting piece in new position
 		this->ZVal ^= ZStuff::pieceZVals[dst][Square[dst]];
@@ -139,9 +149,9 @@ namespace Board {
 		Square[src] = 0;
 	}
 
-	void inline BOARD::clearCastleRights() {
-		this->currentState.castleRights = 0;
-	}
+	//void inline BOARD::clearCastleRights() {
+	//	this->currentState.castleRights = 0;
+	//}
 
 	void inline BOARD::clearCastleRights(int black, int queenside) {
 		setBit(currentState.castleRights, black * 2 + queenside);

@@ -73,7 +73,7 @@ inline void Move::setPromotionPiece(int _piece) {
     piece |= _piece << 12;
 }
 inline void Move::setEnPassant() {
-    piece |= 0b0001 << 8;
+    piece |= 0b000((ulong)1) << 8;
 }
 inline void Move::setCastle() {
     piece |= 0b0010 << 8;
@@ -157,6 +157,32 @@ PiecePos::PiecePos() {
 PiecePos::PiecePos(short _piece, short _pos) {
     piece = _piece;
     pos = _pos;
+}
+
+
+
+std::string PosToStr(int pos) {
+    char strC[3];
+    int rank = pos / 8;
+    int file = pos % 8;
+    strC[0] = file + 97;
+    strC[1] = (rank+1) + 48;
+    strC[2] = 0;
+
+    std::string str(strC);
+    return str;
+}
+
+int StrToPos(std::string str) {
+    char strC[3];
+    strC[0] = str[0];
+    strC[1] = str[1];
+    strC[2] = 0;
+
+
+    int file = strC[0] - 97;
+    int rank = strC[1] - 1 - 48;
+    return rank * 8 + file;
 }
 
 

@@ -3,6 +3,7 @@
 #include "StartUpFunctions.h"
 #include "Info.h"
 #include <fstream>
+#include "Debug.h"
 
 
 
@@ -20,17 +21,10 @@ namespace StartUpFunctions {
 
 
 	void InitAll(int ZSeed) {
-		setUpColourEnPassantRank();
-		setUpDirectionInfoFlat();
-		loadDistanceInfoFlat();
 		setCharToPieceArray();
 
 		ZStuff::initialiseZArrays(ZSeed);
 		std::cout << "initialised" << std::endl;
-
-		std::cout << arr1[0] << std::endl;
-		std::cout << abc << std::endl;
-
 	}
 
 	static int vecToInt(int dX, int dY) {
@@ -46,9 +40,12 @@ namespace StartUpFunctions {
 		}
 	}
 
+
+	void loaddistanceInfoAdd18() { }
 	
-	
-	void loadDistanceInfoFlat() {
+	// actual load distance info flat
+	/*
+	void loaddistanceInfoAdd18() {
 	
 		std::ifstream rf(distanceInfoFile, std::ios::in | std::ios::binary);
 
@@ -77,7 +74,7 @@ namespace StartUpFunctions {
 		{
 			arr[0] = 0;
 			for (int j = 0; j < 4; j++) {
-				Info::distanceInfoFlat[i / 64][i % 37] += (int)buffer[4 * i + j] << 8 * j; // because its little endian
+				Info::distanceInfoAdd18[i / 64][i % 37] += (int)buffer[4 * i + j] << 8 * j; // because its little endian
 			}
 
 
@@ -91,7 +88,7 @@ namespace StartUpFunctions {
 
 
 																// make this 4 (size of int)
-				//rf.read((char*)&Info::distanceInfoFlat[pos][dir], sizeof(int));
+				//rf.read((char*)&Info::distanceInfoAdd18[pos][dir], sizeof(int));
 			}
 		}
 		printf("]. ");
@@ -102,6 +99,8 @@ namespace StartUpFunctions {
 
 
 	}
+
+	*/
 
 	void setCharToPieceArray() {
 
@@ -122,48 +121,52 @@ namespace StartUpFunctions {
 	}
 
 
-	
-	void setUpDistanceInfoFlat() {
+
+	void setUpdistanceInfoAdd18() { }
+
+	// setUpdistanceInfoAdd18()
+	/*
+	void setUpdistanceInfoAdd18() {
 
 		std::cout << "min of 2,3: " << min(2, 3) << std::endl;
 
 		for (int rank = 0; rank < 8; rank++) {
 			for (int file = 0; file < 8; file++) {
-				Info::distanceInfoFlat[rank*8 + file][0*8 + 1 + DistanceInfoDirectionOffset] = 7 - file;
-				assert(Info::distanceInfoFlat[rank * 8 + file][0 * 8 + 1 + DistanceInfoDirectionOffset] == 0 or Info::distanceInfoFlat[rank * 8 + file][0 * 8 + 1 + DistanceInfoDirectionOffset] == 1);
-				Info::distanceInfoFlat[rank*8 + file][1*8 + 1 + DistanceInfoDirectionOffset] = min(7 - rank, 7 - file);
-				Info::distanceInfoFlat[rank*8 + file][1*8 + 0 + DistanceInfoDirectionOffset] = 7 - rank;
-				Info::distanceInfoFlat[rank*8 + file][1*8 + -1 + DistanceInfoDirectionOffset] = min(file, 7 - rank);
-				Info::distanceInfoFlat[rank*8 + file][0*8 + -1 + DistanceInfoDirectionOffset] = file;
-				Info::distanceInfoFlat[rank*8 + file][-1*8 + -1 + DistanceInfoDirectionOffset] = min(file, rank);
-				Info::distanceInfoFlat[rank*8 + file][-1*8 + 0 + DistanceInfoDirectionOffset] = rank;
-				Info::distanceInfoFlat[rank*8 + file][-1*8 + 1 + DistanceInfoDirectionOffset] = min(7 - file, rank);
+				Info::distanceInfoAdd18[rank*8 + file][0*8 + 1 + DistanceInfoDirectionOffset] = 7 - file;
+				assert(Info::distanceInfoAdd18[rank * 8 + file][0 * 8 + 1 + DistanceInfoDirectionOffset] == 0 or Info::distanceInfoAdd18[rank * 8 + file][0 * 8 + 1 + DistanceInfoDirectionOffset] == 1);
+				Info::distanceInfoAdd18[rank*8 + file][1*8 + 1 + DistanceInfoDirectionOffset] = min(7 - rank, 7 - file);
+				Info::distanceInfoAdd18[rank*8 + file][1*8 + 0 + DistanceInfoDirectionOffset] = 7 - rank;
+				Info::distanceInfoAdd18[rank*8 + file][1*8 + -1 + DistanceInfoDirectionOffset] = min(file, 7 - rank);
+				Info::distanceInfoAdd18[rank*8 + file][0*8 + -1 + DistanceInfoDirectionOffset] = file;
+				Info::distanceInfoAdd18[rank*8 + file][-1*8 + -1 + DistanceInfoDirectionOffset] = min(file, rank);
+				Info::distanceInfoAdd18[rank*8 + file][-1*8 + 0 + DistanceInfoDirectionOffset] = rank;
+				Info::distanceInfoAdd18[rank*8 + file][-1*8 + 1 + DistanceInfoDirectionOffset] = min(7 - file, rank);
 
 				//moving in same spot
-				Info::distanceInfoFlat[rank*8 + file][0 + 2, 0 + 2] = 0;
+				Info::distanceInfoAdd18[rank*8 + file][0 + 2, 0 + 2] = 0;
 
 
 				// horse movement (copied and converted from python code in the big comment below
 			
-				Info::distanceInfoFlat[rank * 8 + file][0 * 8 + 1 + DistanceInfoDirectionOffset]   = file <= 5 and rank <= 6 ? 1 : 0;
-				Info::distanceInfoFlat[rank * 8 + file][1 * 8 + 1 + DistanceInfoDirectionOffset]   = file <= 6 and rank <= 5 ? 1 : 0;
-				Info::distanceInfoFlat[rank * 8 + file][1 * 8 + 0 + DistanceInfoDirectionOffset]   = file >= 1 and rank <= 5 ? 1 : 0;
-				Info::distanceInfoFlat[rank * 8 + file][1 * 8 + -1 + DistanceInfoDirectionOffset]  = file >= 2 and rank <= 6 ? 1 : 0;
-				Info::distanceInfoFlat[rank * 8 + file][0 * 8 + -1 + DistanceInfoDirectionOffset]  = file >= 2 and rank >= 1 ? 1 : 0;
-				Info::distanceInfoFlat[rank * 8 + file][-1 * 8 + -1 + DistanceInfoDirectionOffset] = file >= 1 and rank >= 2 ? 1 : 0;
-				Info::distanceInfoFlat[rank * 8 + file][-1 * 8 + 0 + DistanceInfoDirectionOffset]  = file <= 6 and rank >= 2 ? 1 : 0;
-				Info::distanceInfoFlat[rank * 8 + file][-1 * 8 + 1 + DistanceInfoDirectionOffset]  = file <= 5 and rank >= 1 ? 1 : 0;
+				Info::distanceInfoAdd18[rank * 8 + file][0 * 8 + 1 + DistanceInfoDirectionOffset]   = file <= 5 and rank <= 6 ? 1 : 0;
+				Info::distanceInfoAdd18[rank * 8 + file][1 * 8 + 1 + DistanceInfoDirectionOffset]   = file <= 6 and rank <= 5 ? 1 : 0;
+				Info::distanceInfoAdd18[rank * 8 + file][1 * 8 + 0 + DistanceInfoDirectionOffset]   = file >= 1 and rank <= 5 ? 1 : 0;
+				Info::distanceInfoAdd18[rank * 8 + file][1 * 8 + -1 + DistanceInfoDirectionOffset]  = file >= 2 and rank <= 6 ? 1 : 0;
+				Info::distanceInfoAdd18[rank * 8 + file][0 * 8 + -1 + DistanceInfoDirectionOffset]  = file >= 2 and rank >= 1 ? 1 : 0;
+				Info::distanceInfoAdd18[rank * 8 + file][-1 * 8 + -1 + DistanceInfoDirectionOffset] = file >= 1 and rank >= 2 ? 1 : 0;
+				Info::distanceInfoAdd18[rank * 8 + file][-1 * 8 + 0 + DistanceInfoDirectionOffset]  = file <= 6 and rank >= 2 ? 1 : 0;
+				Info::distanceInfoAdd18[rank * 8 + file][-1 * 8 + 1 + DistanceInfoDirectionOffset]  = file <= 5 and rank >= 1 ? 1 : 0;
 			}
 		}
 
 
 	}
-	
-
+	*/
+	/*
 	void setUpDirectionInfoFlat() {
 
 		// array already initialised to 0 so only need to deal with the non zero cases
-/*
+
 #define EMPTY 0
 #define PAWN 1
 #define KNIGHT 2
@@ -171,7 +174,7 @@ namespace StartUpFunctions {
 #define ROOK 4
 #define KING 5
 #define QUEEN 6
-*/
+
 		
 		// will do white first then figure out how to spread this to black later
 		// to do black will just loop through the black and just set every entry
@@ -243,14 +246,36 @@ namespace StartUpFunctions {
 
 		// now all the black ones too
 
+		for (int i = 0; i < 16; i++) {
+
+
+
+
+
+
+		}
+
+		std::string str;
+		str = "{";
+
+		//printf(Info::directionInfoFlat[0]);
+
+
+
 
 	}
+	*/
 
+
+	void setUpDirectionInfoFlat() {	}
+
+	/*
 	void setUpColourEnPassantRank() {
 		// if the enPassant rank is the rank at which the piece being eaten sits on
 		Info::colourEnPassantRank[0] = 3;
-		Info::colourEnPassantRank[0] = 4;
+		Info::colourEnPassantRank[1] = 4;
 	}
+	*/
 
 
 }

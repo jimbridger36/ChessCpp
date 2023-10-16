@@ -23,7 +23,7 @@ int main()
 
     StartUpFunctions::InitAll(1);
 
-    //Debug::saveDistanceInfoFlatToFile();
+    //Debug::savedistanceInfoAdd18ToFile();
 
 
 

@@ -40,6 +40,12 @@ namespace Board {
 
 
 	BOARD::BOARD(){
+
+		//std::cout << "NULL CONSTRUCTOR CALLED" << std::endl;
+		/*
+		this->Attacked[0] = 1;
+		this->Attacked[1] = 2;
+
 		char fileToRead[fileCharLength] = {0};
 
 			
@@ -48,14 +54,17 @@ namespace Board {
 		for (std::string::size_type i = 0; i < str.size(); i++)
 			fileToRead[i] = str[i];
 
-
+		std::cout << "reading file from null constructor: " << std::endl;
 		ht = HT(fileToRead);
+		std::cout << "finished reading file";
+		*/
 			
 		
 	};
 
 	BOARD::BOARD(const char* fen, char _fileToReadFrom[fileCharLength]) {
-		
+		//std::cout << "Initialisation called";
+
 		int rank = 0, file = 0;
 
 
@@ -79,8 +88,11 @@ namespace Board {
 
 
 	BOARD::BOARD(int _Square[64], irreversibleState _state, char _fileToReadFrom[fileCharLength], int _currentPly) {
+			//std::cout << " INITIALISATION CALLED" << std::endl;
+			//std::cout << "pre reading file (using the HT file constructor from the BOARD non null constructor): " << std::endl;
 
 			ht = HT(_fileToReadFrom);
+			//std::cout << " post reading file" << std::endl;
 
 			this->currentPly = _currentPly;
 			this->currentState = _state;

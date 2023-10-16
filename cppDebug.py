@@ -212,7 +212,7 @@ def getLine(arr):
 
 
 
-
+# hello this is wildly different
 
 print(saveDistanceInfoToFile())
 

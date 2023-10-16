@@ -96,8 +96,8 @@ namespace Board {
 
 	void BOARD::makeMove(Move move) {
 
-		bool black = getBit(move.piece, 3) > 0;
-		bool white = not black;
+		int black = getBit(move.piece, 3) > 0;
+		int white = black ^ 1;
 
 		this->moveStack[this->currentPly] = move;
 		this->currentPly++;
@@ -203,7 +203,7 @@ namespace Board {
 
 		}
 		
-		currentState.blackToPlay != currentState.blackToPlay;
+		currentState.blackToPlay = currentState.blackToPlay ^ 1;
 
 		pushStateToStack();
 		doIrreversibleZChanges();
@@ -212,14 +212,23 @@ namespace Board {
 	}
 
 	void BOARD::unmakeMove() {
-		// could do this by storing the complete state of the game after every move (including the change in ZVal) and putting this into a mega completeStateStack, but siply undoing the move might weed out some errors
 
-		int oldPly = currentPly - 1;
+		
+		// could do this by storing the complete state of the game after every move (including the change in ZVal) and putting this into a mega completeStateStack, but siply undoing the move might weed out some errors, also seems like it might also save
+		// also doing it the completeStateStack way would require copying {Square (64B), irreversibleState (4B), defo less than 100 Bytes)
+
+		DEBUG //int oldPly = currentPly - 1;
+		DEBUG int oldPly = 2;
+
 		int oldBlack = 1 - currentState.blackToPlay;
 		int oldWhite = currentState.blackToPlay;
 
 		Move move = moveStack[oldPly]; // moveStack hold the move executed on that ply (e.g the starting move in in ply 0)
+		std::cout << move.piece << " " << move.start << "->" << move.end << std::endl;
+		
 		gameOver = 0;
+
+		
 
 
 		doIrreversibleZChanges(stateStack[currentPly], stateStack[oldPly]);
@@ -266,6 +275,8 @@ namespace Board {
 		}
 
 		// else if a normal move (or promotion)
+
+		
 		else {
 			// if there is a capture
 			if (move.capturedPiece()) {
@@ -292,6 +303,7 @@ namespace Board {
 
 
 		}
+		
 		currentState.blackToPlay != currentState.blackToPlay;
 
 

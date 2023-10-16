@@ -29,7 +29,7 @@ print(os.path.abspath(__file__))
 
 setup(
     name="cppChess",
-    ext_modules=cythonize(extensions),
+    ext_modules=cythonize(extensions, gdb_debug=True),
     zip_safe=False
 )
 
